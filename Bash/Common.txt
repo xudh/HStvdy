@@ -1,3 +1,17 @@
+书 ：<<Advanced Bash-Scripting Guide>> 《高级Bash脚本指南》
+
+#在控制台上进行计算
+echo $[ 123 * 456 - 789 ] 
+echo $(( 123 * 456 - 789 )) 
+printf "%x\n" $[ 123 * 456 - 789 ]
+printf "%X\n" $[ 123 * 456 - 789 ]   
+printf "%08x\n" $[ 123 * 456 - 789 ]
+
+#$()则和``一样计算命令的执行结果
+t1=$(date +%s);echo $t1
+t1=$(date +%s);echo $t1;sleep 3;t2=`date +%s`;echo $t2 $(($t2-$t1))
+t1=$SECONDS;echo $t1;sleep 3;t2=$SECONDS;echo $t2 $(($t2-$t1))
+
 #对文件 01异或 处理
 od -A n -t u1 -v  -w1 输入文件名 | awk '{printf("%c",255-$0)}' > 输出文件名
 
