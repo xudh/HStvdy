@@ -54,7 +54,7 @@ void BubbleSort(int arr[], size_t count)
 	while (count > 0)
 	{
 		_Bool bNoExchange = true;	// 没有交换
-		for (int j = 0; j < count; ++j)		// 每次在前count个数值中将最大的冒到最后(是count个数的最后，不是总的数的最后)
+		for (size_t j = 0; j + 1 < count; ++j)		// 每次在前count个数值中将最大的冒到最后(是count个数的最后，不是总的数的最后)
 		{
 			if (arr[j] > arr[j + 1])
 			{
@@ -91,7 +91,7 @@ int main(void)
 	}
 	printf("\n");
 
-	SelectSort(testVal[2], sizeof(testVal[2]) / sizeof(testVal[2][0]));
+	BubbleSort(testVal[2], sizeof(testVal[2]) / sizeof(testVal[2][0]));
 	for (size_t i = 0; i < sizeof(testVal[2]) / sizeof(testVal[2][0]); ++i)
 	{
 		printf("%d\t", testVal[2][i]);
