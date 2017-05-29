@@ -3,9 +3,9 @@
 "set nocompatible	" 不兼容，在和vi有出入时，用vim的方式处理，/etc/vimrc已经设置了
 set number		" 在左边显示行号
 set ruler		" 下方状态栏显示光标行列坐标
-"set tabstop=4		" 接下来三个是设置tab间距用的，默认是8
-"set softtabstop=4
-"set shiftwidth=4
+set tabstop=4		" 接下来三个是设置tab间距用的，默认是8
+set softtabstop=4
+set shiftwidth=4
 syntax on		" 语法高亮
 
 set autowrite		" 切换文件时自动保存未修改的
