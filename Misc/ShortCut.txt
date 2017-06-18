@@ -1,0 +1,25 @@
+#快捷键对应的英文全称
+
+#windows上的
+Ctrl+g 跳行g=go
+Ctrl+f 查找f=find
+Ctrl+a 全选a=all
+Ctrl+p 打印p=print
+Ctrl+c 复制c=copy
+Ctrl+v 粘贴v=viscidity，v形似漏斗
+Ctrl+s 保存s=save
+Ctrl+x 剪切x=形似剪刀
+Ctrl+h 替换
+Ctrl+z 撤销
+
+#在linux控制台上，windows上的快捷键一般要加Shift，比如
+Ctrl+c变成Ctrl+Shift+c
+而Ctrl+c则是中断程序执行c=cut
+Ctrl＋u    删除光标左边的所有字符
+Ctrl＋k    删除光标右边的所有字符
+Ctrl＋a    把光标移动到字符之首	alpha
+Ctrl＋e    把光标移动到字符尾部	end
+Ctrl＋w    删除光标左边的单词	word
+Ctrl＋d    删除光标后的单个字符
+Ctrl＋h    删除光标前的一个字符 head
+

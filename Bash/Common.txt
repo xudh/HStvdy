@@ -18,9 +18,16 @@ od -A n -t u1 -v  -w1 输入文件名 | awk '{printf("%c",255-$0)}' > 输出文�
 #time_t数值的时间显示成字符形式，有时区差的要加-u
 date -d "$[ 1494746368 - `date +%s` ] sec"
 
+#删除/dev/sda的MBR分区表
+dd if=/dev/zero of=/dev/sda bs=1 seek=446 count=64
+
 #find命令使用多次{}示例
 find . -type f ! -name "*.bak" -exec sh -c "cat {} > {}.bak" \;
+
+#截掉文件头几字节，比如去掉windows上utf-8文件的BOM头
+tail --byte=+4 infile > outfile
 
 #ctags生成C++工程标签
 ctags --language-force=c++ --c++-kinds=+px --fields=aiKSz -- extra=+q --exclude=*/.svn/* --exclude=*/目录x/* --exclude=* /目录y/* --recurse
 #这个递归--recurse应该放在--exclude的后面，否则没效果。
+

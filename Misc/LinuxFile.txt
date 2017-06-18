@@ -1,0 +1,25 @@
+#使用配置和信息文件可以减少小工具的存在，平时可用strace命令跟踪命令使用了哪些文件。
+
+#查看系统版本号
+cat /etc/issue
+cat /proc/version
+cat /proc/sys/kernel/version
+
+#查看账户信息
+cat /etc/passwd
+
+#查看cpu信息
+cat /proc/cpuinfo
+
+#查看内存信息
+cat /proc/meminfo
+
+#释放缓存
+echo 3 > /proc/sys/vm/drop_caches
+
+#查看存储设备的IO信息
+cat /proc/diskstats
+
+#查看或修改块设备调度策略
+cat /sys/class/block/sda/queue/scheduler 
+

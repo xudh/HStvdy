@@ -1,0 +1,336 @@
+函数调用过程堆栈分析
+系统环境：
+[root@localhost ~]# uname -a
+Linux localhost.localdomain 2.6.18-238.el5 #1 SMP Thu Jan 13 16:24:47 EST 2011 i686 i686 i386 GNU/Linux
+[root@localhost ~]# cat /etc/issue
+CentOS release 5.7 (Final)
+Kernel \r on an \m
+[root@localhost ~]# cat /proc/cpuinfo
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 23
+model name      : Intel(R) Core(TM)2 Duo CPU     T6570  @ 2.10GHz
+
+测试代码：
+[root@localhost ~]# cat CallAnalyze.c
+#include <stdio.h>
+
+void Fun1(int id, const char *pstr)
+{
+        char cArr[0x100] = "QWERT";
+
+        if(id > 0)
+        {
+                int iArr[0x100] = {64, };
+        }
+        else
+        {
+                char cArr2[0x1000];
+        }
+
+        printf("id = %d, pstr = %s, cArr = %s.\n", id, pstr, cArr);
+}
+
+int Fun2(int id)
+{
+        return (id + 2);
+}
+
+int main(void)
+{
+        int i = 9;
+        Fun1(i, "Hello World.\n");
+        i = Fun2(i);
+        printf("i = %d.\n", i);
+
+        return 0;
+}
+
+分析过程：
+[root@localhost ~]# gcc -g CallAnalyze.c
+[root@localhost ~]# gdb a.out
+GNU gdb (GDB) Red Hat Enterprise Linux (7.0.1-37.el5_7.1)
+Copyright (C) 2009 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i386-redhat-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /root/a.out...done.
+(gdb) break CallAnalyze.c:26
+Breakpoint 1 at 0x8048486: file CallAnalyze.c, line 26.
+(gdb) run
+Starting program: /root/a.out 
+
+Breakpoint 1, main () at CallAnalyze.c:26
+26              int i = 9;
+(gdb) disassemble /m
+Dump of assembler code for function main:      // AT&T 风格DST、SRC和x86似乎相反
+25      {
+0x08048475 <main+0>:    lea    0x4(%esp),%ecx
+0x08048479 <main+4>:    and    $0xfffffff0,%esp
+0x0804847c <main+7>:    pushl  -0x4(%ecx)
+0x0804847f <main+10>:   push   %ebp
+0x08048480 <main+11>:   mov    %esp,%ebp
+0x08048482 <main+13>:   push   %ecx
+0x08048483 <main+14>:   sub    $0x24,%esp      //  顺序是先压栈，然后esp指针下移。分配了栈空间给ebp及下面的变量。
+
+26              int i = 9;
+0x08048486 <main+17>:   movl   $0x9,-0x8(%ebp)
+
+27              Fun1(i, "Hello World.\n");
+0x0804848d <main+24>:   movl   $0x80486c0,0x4(%esp)  // "Hello World. 先入栈"
+0x08048495 <main+32>:   mov    -0x8(%ebp),%eax    // i后入栈
+0x08048498 <main+35>:   mov    %eax,(%esp)
+0x0804849b <main+38>:   call   0x80483d4 <Fun1>    //  进入函数
+
+28              i = Fun2(i);
+0x080484a0 <main+43>:   mov    - 0x8(%ebp),%eax    // 后面的代码行
+0x080484a3 <main+46>:   mov    %eax,(%esp)
+0x080484a6 <main+49>:   call   0x804846a <Fun2>
+---Type <return> to continue, or q <return> to quit---
+0x080484ab <main+54>:   mov    %eax,-0x8(%ebp)
+
+29              printf("i = %d.\n", i);
+0x080484ae <main+57>:   mov    -0x8(%ebp),%eax
+0x080484b1 <main+60>:   mov    %eax,0x4(%esp)
+0x080484b5 <main+64>:   movl   $0x80486ce,(%esp)
+0x080484bc <main+71>:   call   0x80482e8 <>
+
+30
+31              return 0;
+0x080484c1 <main+76>:   mov    $0x0,%eax
+
+32      }
+0x080484c6 <main+81>:   add    $0x24,%esp
+0x080484c9 <main+84>:   pop    %ecx
+0x080484ca <main+85>:   pop    %ebp
+0x080484cb <main+86>:   lea    -0x4(%ecx),%esp
+0x080484ce <main+89>:   ret    
+
+End of assembler dump.
+(gdb) print /s (const char *)0x80486c0
+$2 = 0x80486c0 "Hello World.\n"
+(gdb) next
+27              Fun1(i, "Hello World.\n");
+…………
+(gdb) stepi
+0x0804849b      27              Fun1(i, "Hello World.\n");
+(gdb) print $pc
+$4 = (void (*)()) 0x804849b <main+38>
+(gdb) info registers
+eax            0x9      9
+ecx            0xbfffe780       -1073748096
+edx            0x1      1
+ebx            0x689ff4 6856692
+esp            0xbfffe740       0xbfffe740
+ebp            0xbfffe768       0xbfffe768
+esi            0x531ca0 5446816
+edi            0x0      0
+eip            0x804849b        0x804849b <main+38>
+eflags         0x200282 [ SF IF ID ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x33     51
+(gdb) stepi
+Fun1 (id=9, pstr=0x80486c0 "Hello World.\n") at CallAnalyze.c:4
+4       {
+(gdb) info registers
+eax            0x9      9
+ecx            0xbfffe780       -1073748096
+edx            0x1      1
+ebx            0x689ff4 6856692
+esp            0xbfffe73c       0xbfffe73c
+ebp            0xbfffe768       0xbfffe768
+esi            0x531ca0 5446816
+edi            0x0      0
+eip            0x80483d4        0x80483d4 <Fun1>
+eflags         0x200282 [ SF IF ID ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x33     51
+可以看出，esp减少了4。少了什么呢？
+(gdb) x/4wx $esp
+0xbfffe73c:     0x080484a0      0x00000009      0x080486c0      0xbfffe778
+这个0x080484a0就是函数执行完要跳到的下一条语句
+0x080484a0 <main+43>:   mov    -0x8(%ebp),%eax
+现在执行到了
+(gdb) disassemble /m
+Dump of assembler code for function Fun1:
+4       {
+0x080483d4 <Fun1+0>:    push   %ebp        //  这个ebp还是外层函数的，入栈
+0x080483d5 <Fun1+1>:    mov    %esp,%ebp      // esp->ebp， 当前的栈顶作为新的基址
+0x080483d7 <Fun1+3>:    sub    $0x1118,%esp     //  顺序是先压栈，然后esp指针下移。分配了栈空间给ebp及下面的变量。
+
+5               char cArr[0x100] = "QWERT";
+0x080483dd <Fun1+9>:    mov    0x80485c0,%eax
+0x080483e2 <Fun1+14>:   mov    %eax,-0x100(%ebp)
+0x080483e8 <Fun1+20>:   movzwl 0x80485c4,%eax
+0x080483ef <Fun1+27>:   mov    %ax,-0xfc(%ebp)
+0x080483f6 <Fun1+34>:   lea    -0xfa(%ebp),%edx
+0x080483fc <Fun1+40>:   mov    $0xfa,%eax
+0x08048401 <Fun1+45>:   mov    %eax,0x8(%esp)
+0x08048405 <Fun1+49>:   movl   $0x0,0x4(%esp)
+0x0804840d <Fun1+57>:   mov    %edx,(%esp)
+0x08048410 <Fun1+60>:   call   0x80482c8 <>
+
+6
+7               if(id > 0)
+0x08048415 <Fun1+65>:   cmpl   $0x0,0x8(%ebp)
+0x08048419 <Fun1+69>:   jle    0x8048444 <Fun1+112>
+
+---Type <return> to continue, or q <return> to quit---
+8               {
+9                       int iArr[0x100] = {64, };
+0x0804841b <Fun1+71>:   lea    -0x1100(%ebp),%edx
+0x08048421 <Fun1+77>:   mov    $0x400,%eax
+0x08048426 <Fun1+82>:   mov    %eax,0x8(%esp)
+0x0804842a <Fun1+86>:   movl   $0x0,0x4(%esp)
+0x08048432 <Fun1+94>:   mov    %edx,(%esp)
+0x08048435 <Fun1+97>:   call   0x80482c8 <>
+0x0804843a <Fun1+102>:  movl   $0x40,-0x1100(%ebp)
+
+10              }
+11              else
+12              {
+13                      char cArr2[0x1000];     //  这块应该在编译时就被忽略了
+14              }
+15
+16              printf("id = %d, pstr = %s, cArr = %s.\n", id, pstr, cArr);
+0x08048444 <Fun1+112>:  lea    -0x100(%ebp),%eax
+0x0804844a <Fun1+118>:  mov    %eax,0xc(%esp)
+0x0804844e <Fun1+122>:  mov    0xc(%ebp),%eax
+0x08048451 <Fun1+125>:  mov    %eax,0x8(%esp)
+0x08048455 <Fun1+129>:  mov    0x8(%ebp),%eax
+0x08048458 <Fun1+132>:  mov    %eax,0x4(%esp)
+---Type <return> to continue, or q <return> to quit---
+0x0804845c <Fun1+136>:  movl   $0x80485a0,(%esp)
+0x08048463 <Fun1+143>:  call   0x80482e8 <>
+
+17      }
+0x08048468 <Fun1+148>:  leave  
+0x08048469 <Fun1+149>:  ret    
+
+End of assembler dump.
+(gdb) print &cArr        
+
+$7 =& nbsp;(char (*) [256]) 0xbfffe638         //  比esp小0x104，多消耗一个字(4字节)的空间
+(gdb) print &iArr
+No symbol "iArr" in current context.
+(gdb) stepi
+0x080483d5      4       {
+(gdb) x/4wx $esp               // 说明ebp压栈正好消耗这一个字的空间
+0xbfffe738:     0xbfffe768      0x080484a0      0x00000009      0x080486c0(gdb) next
+7               if(id > 0)
+(gdb) x/8bc 0xbfffe638
+0xbfffe638:     81 'Q'  87 'W'  69 'E'  82 'R'  84 'T'  0 '\000'        0 '\000'0 '\000'
+正是赋值之后的效果。
+
+(gdb) next
+9                       int iArr[0x100] = {64, };
+(gdb) print &iArr
+$8 = (int (*)[256]) 0xbfffd638
+从
+0x080483d7 <Fun1+3>:    sub    $0x1118,%esp 
+和
+9                       int iArr[0x100] = {64, };
+0x0804841b <Fun1+71>:   lea    -0x1100(%ebp),%edx
+可以看出，早为iArr分配了栈空间，只是符号不能识别。
+
+继续下走到了
+(gdb) print $pc
+$10 =& nbsp;(void (*) ()) 0x8048468 <Fun1+148>      //  执行leave指令，销毁局部变量，释放栈空间
+(gdb) info register
+eax            0x2c     44
+ecx            0x0      0
+edx            0x68b0d0 6861008
+ebx            0x689ff4 6856692
+esp            0xbfffd620       0xbfffd620
+ebp            0xbfffe738       0xbfffe738
+esi            0x531ca0 5446816
+edi            0x0      0
+eip            0x8048468        0x8048468 <Fun1+148>
+eflags         0x200286 [ PF SF IF ID ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x33     51
+(gdb) stepi
+0x08048469 in Fun1 (id=5446816, pstr=0x80484e0 "U\211\345WVS\350^")
+    at CallAnalyze.c:17
+17      }
+(gdb) info register
+eax            0x2c     44
+ecx            0x0      0
+edx            0x68b0d0 6861008
+ebx            0x689ff4 6856692
+esp            0xbfffe73c       0xbfffe73c
+ebp            0xbfffe768       0xbfffe768
+esi            0x531ca0 5446816
+edi            0x0      0
+eip            0x8048469        0x8048469 <Fun1+149>
+eflags         0x200286 [ PF SF IF ID ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x33     51
+(gdb) stepi                //  执行ret指令，跳到下条语句0x080484a0，同时该地址出栈
+main () at CallAnalyze.c:28
+28              i = Fun2(i);
+(gdb) info registers
+eax            0x2c     44
+ecx            0x0      0
+edx            0x68b0d0 6861008
+ebx            0x689ff4 6856692
+esp            0xbfffe740       0xbfffe740
+ebp            0xbfffe768       0xbfffe768
+esi            0x531ca0 5446816
+edi            0x0      0
+eip            0x80484a0        0x80484a0 <main+43>
+eflags         0x200286 [ PF SF IF ID ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x33     51
+可以看出，参数仍未出栈，结论是，参数属于外层函数。
+
+后面那个带返回值的函数和之前的差不多，返回值放在eax里，不占栈空间。
+
+
+总结：
+
+压栈顺序是
+
+｜参数2｜
+
+｜参数1｜
+
+｜返回地址，也就是调用函数，后面那行代码｜——这步由运行时系统执行汇编代码里只能看到执行结果
+
+｜EBP｜
+
+｜函数内部变量｜
+
+ESP递减。
+
+
+理论上：如果是对象的成员函数，参数入栈后，对象的地址也会入栈，如：obj.func(args)这种形式。
+
+
+此外，Window7_x86, VC2008环境下，｜EBP｜和｜函数内部变量｜间有一字的间隙，难道是双字对齐？
+
