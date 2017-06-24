@@ -7,6 +7,9 @@ printf "%x\n" $[ 123 * 456 - 789 ]
 printf "%X\n" $[ 123 * 456 - 789 ]   
 printf "%08x\n" $[ 123 * 456 - 789 ]
 
+#修改文件后缀名
+cp file.{h,h.bak}
+
 #$()则和``一样计算命令的执行结果
 t1=$(date +%s);echo $t1
 t1=$(date +%s);echo $t1;sleep 3;t2=`date +%s`;echo $t2 $(($t2-$t1))

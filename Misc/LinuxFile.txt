@@ -23,3 +23,6 @@ cat /proc/diskstats
 #查看或修改块设备调度策略
 cat /sys/class/block/sda/queue/scheduler 
 
+#停掉的网卡也能显示出来
+ls /sys/class/net/
+
