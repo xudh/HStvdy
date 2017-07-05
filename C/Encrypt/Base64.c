@@ -36,7 +36,7 @@ int Base64Encode(char *pDst, size_t dstSize, const void *pSrc, size_t srcLen)
 	return 0;
 }
 
-int Base64Decode(void *pDst, size_t dstSize, const char *pSrc)
+int Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码后的长度，大于0表示正确
 {
 	size_t len = strlen(pSrc);
 	if (len % 4 != 0 || (len / 4) * 3 + 1 > dstSize)
@@ -92,7 +92,7 @@ int Base64Decode(void *pDst, size_t dstSize, const char *pSrc)
 	}
 
 	if (len < 1)
-		return 0;
+		return (pD - (uint8_t *)pDst);
 	else if (len != 4)
 	{
 		printf("%s:%d len = %zu\n", __func__, __LINE__, len);
@@ -101,7 +101,7 @@ int Base64Decode(void *pDst, size_t dstSize, const char *pSrc)
 	else
 	{
 		if (pS[3] == '=')
-			return 0;
+			return (pD - (uint8_t *)pDst);
 		else
 		{
 			printf("%s:%d pS[3] = %d\n", __func__, __LINE__, pS[3]);
@@ -110,8 +110,32 @@ int Base64Decode(void *pDst, size_t dstSize, const char *pSrc)
 	}
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	if (argc == 3)
+	{
+		if (strcmp(argv[1], "-e") == 0)			// 加密
+		{
+			char dst[128] = {0};
+			if (Base64Encode(dst, sizeof(dst), argv[2], strlen(argv[2])) == 0)
+				printf("Base64Encode(%s) = %s\n", argv[2], dst);
+			return 0;
+		}
+		else if (strcmp(argv[1], "-d") == 0)		// 解密
+		{
+			uint8_t dst2[128] = {0};
+			int ret = Base64Decode(dst2, sizeof(dst2), argv[2]);
+			if (ret > 0)
+			{
+				printf("Base64Decode(%s) = ", argv[2]);
+				for (int i = 0; i < ret; ++i)
+					printf("%02x ", dst2[i]);
+				putchar('\n');
+			}
+			return 0;
+		}
+	}
+
 	const char testChr[][64] = {"a", "ab", "abc", "abcd", "abcde", "abcdef", "abcdefg", "汉字", "汉字&English"};
 	char dst[128] = {0};
 	for (size_t i = 0; i < sizeof(testChr) / sizeof(testChr[0]); ++i)
@@ -120,7 +144,7 @@ int main(void)
 		{
 			printf("Base64Encode(%s) = %s\n", testChr[i], dst);
 			uint8_t dst2[128] = {0};
-			if (Base64Decode(dst2, sizeof(dst2), dst) == 0)
+			if (Base64Decode(dst2, sizeof(dst2), dst) > 0)
 			{
 				if (strcmp((const char *)dst2, testChr[i]) != 0)
 					printf("Base64Decode(%s) = %s\n", dst, (const char *)dst2);
