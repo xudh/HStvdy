@@ -36,7 +36,7 @@ int Base64Encode(char *pDst, size_t dstSize, const void *pSrc, size_t srcLen)
 	return 0;
 }
 
-int Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码后的长度，大于0表示正确
+long Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码后的长度，大于0表示正确
 {
 	size_t len = strlen(pSrc);
 	if (len % 4 != 0 || (len / 4) * 3 + 1 > dstSize)
@@ -124,11 +124,11 @@ int main(int argc, char *argv[])
 		else if (strcmp(argv[1], "-d") == 0)		// 解密
 		{
 			uint8_t dst2[128] = {0};
-			int ret = Base64Decode(dst2, sizeof(dst2), argv[2]);
+			long ret = Base64Decode(dst2, sizeof(dst2), argv[2]);
 			if (ret > 0)
 			{
 				printf("Base64Decode(%s) = ", argv[2]);
-				for (int i = 0; i < ret; ++i)
+				for (long i = 0; i < ret; ++i)
 					printf("%02x ", dst2[i]);
 				putchar('\n');
 			}
