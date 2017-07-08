@@ -36,13 +36,13 @@ int Base64Encode(char *pDst, size_t dstSize, const void *pSrc, size_t srcLen)
 	return 0;
 }
 
-long Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码后的长度，大于0表示正确
+size_t Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码后的长度，大于0表示正确
 {
 	size_t len = strlen(pSrc);
 	if (len % 4 != 0 || (len / 4) * 3 + 1 > dstSize)
 	{
 		printf("%s:%d len = %zu, dstSize = %zu\n", __func__, __LINE__, len, dstSize);
-		return -1;
+		return 0;
 	}
 
 	for (size_t i = 0; i < len; ++i)
@@ -50,7 +50,7 @@ long Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码�
 		if (pSrc[i] < 0)
 		{
 			printf("%s:%d pSrc[%zu] = %d\n", __func__, __LINE__, i, pSrc[i]);
-			return -1;
+			return 0;
 		}
 	}
 
@@ -75,7 +75,7 @@ long Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码�
 			|| (pS[2] != '=' && base64Code[pS[2]] == -1) || (pS[3] != '=' && base64Code[pS[3]] == -1))
 		{
 			printf("%s:%d pS[0-3] = %d%d%d%d\n", __func__, __LINE__, pS[0], pS[1], pS[2], pS[3]);
-			return -1;
+			return 0;
 		}
 
 		*pD++ = (base64Code[pS[0]] << 2) | (base64Code[pS[1]] >> 4);
@@ -96,7 +96,7 @@ long Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码�
 	else if (len != 4)
 	{
 		printf("%s:%d len = %zu\n", __func__, __LINE__, len);
-		return -1;
+		return 0;
 	}
 	else
 	{
@@ -105,7 +105,7 @@ long Base64Decode(void *pDst, size_t dstSize, const char *pSrc)	// 返回解码�
 		else
 		{
 			printf("%s:%d pS[3] = %d\n", __func__, __LINE__, pS[3]);
-			return -1;
+			return 0;
 		}
 	}
 }
