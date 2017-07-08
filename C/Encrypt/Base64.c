@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 		else if (strcmp(argv[1], "-d") == 0)		// 解密
 		{
 			uint8_t dst2[128] = {0};
-			long ret = Base64Decode(dst2, sizeof(dst2), argv[2]);
+			size_t ret = Base64Decode(dst2, sizeof(dst2), argv[2]);
 			if (ret > 0)
 			{
 				printf("Base64Decode(%s) = ", argv[2]);
