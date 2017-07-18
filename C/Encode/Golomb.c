@@ -1,5 +1,4 @@
 // 哥伦布编码，及其两个变种：Golomb-Rice和Exp-Golomb
-// http://www.cnblogs.com/wangguchangqing/p/6297792.html
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

@@ -29,6 +29,10 @@ find . -type f ! -name "*.bak" -exec sh -c "cat {} > {}.bak" \;
 
 #截掉文件头几字节，比如去掉windows上utf-8文件的BOM头
 tail --byte=+4 infile > outfile
+#去掉BOM头也可以
+sed -i '1 s/^\xef\xbb\xbf//' testfile.txt
+#反过来，增加utf-8的BOM头
+sed -i '1 s/^/\xef\xbb\xbf/' testfile.txt
 
 #ctags生成C++工程标签
 ctags --language-force=c++ --c++-kinds=+px --fields=aiKSz -- extra=+q --exclude=*/.svn/* --exclude=*/目录x/* --exclude=* /目录y/* --recurse
