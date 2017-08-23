@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
 	if (chmod(argv[0], S_IWUSR|S_IWGRP|S_IWOTH) == 0)
 	{
-		if (unlink(argv[0]) == 0)
+		if (unlink(argv[0]) == 0)	// remove(argv[0])也可以
 			return 0;
 		else
 		{
